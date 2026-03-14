@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, numeric, integer, boolean, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, numeric, integer, boolean, timestamp, pgEnum } from "drizzle-orm/pg-core";
 
 // Enums
 export const orderStatusEnum = pgEnum("order_status", [
@@ -9,7 +9,7 @@ export const userRoleEnum = pgEnum("user_role", ["customer", "admin"]);
 
 // Tablas
 export const users = pgTable("users", {
-  id:        uuid("id").primaryKey().defaultRandom(),
+  id:        text("id").primaryKey(),
   email:     text("email").notNull().unique(),
   phone:     text("phone"),
   role:      userRoleEnum("role").default("customer"),
@@ -17,18 +17,18 @@ export const users = pgTable("users", {
 });
 
 export const categories = pgTable("categories", {
-  id:           uuid("id").primaryKey().defaultRandom(),
+  id:           text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   name:         text("name").notNull(),
   slug:         text("slug").notNull().unique(),
-  parentId:     uuid("parent_id"),
+  parentId:     text("parent_id"),
   displayOrder: integer("display_order").default(0),
 });
 
 export const products = pgTable("products", {
-  id:            uuid("id").primaryKey().defaultRandom(),
+  id:            text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   name:          text("name").notNull(),
   sku:           text("sku").notNull().unique(),
-  categoryId:    uuid("category_id").references(() => categories.id),
+  categoryId:    text("category_id").references(() => categories.id),
   pricePerKg:    numeric("price_per_kg", { precision: 10, scale: 2 }).notNull(),
   stockKg:       numeric("stock_kg", { precision: 10, scale: 3 }).notNull().default("0"),
   origin:        text("origin"),
@@ -40,8 +40,8 @@ export const products = pgTable("products", {
 });
 
 export const addresses = pgTable("addresses", {
-  id:        uuid("id").primaryKey().defaultRandom(),
-  userId:    uuid("user_id").references(() => users.id),
+  id:        text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId:    text("user_id").references(() => users.id),
   street:    text("street").notNull(),
   number:    text("number").notNull(),
   city:      text("city").notNull(),
@@ -52,7 +52,7 @@ export const addresses = pgTable("addresses", {
 });
 
 export const deliveryZones = pgTable("delivery_zones", {
-  id:           uuid("id").primaryKey().defaultRandom(),
+  id:           text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   name:         text("name").notNull(),
   deliveryDays: text("delivery_days").array(),
   minOrder:     numeric("min_order", { precision: 10, scale: 2 }),
@@ -60,8 +60,8 @@ export const deliveryZones = pgTable("delivery_zones", {
 });
 
 export const orders = pgTable("orders", {
-  id:           uuid("id").primaryKey().defaultRandom(),
-  userId:       uuid("user_id").references(() => users.id),
+  id:           text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId:       text("user_id").references(() => users.id),
   status:       orderStatusEnum("status").default("pending"),
   total:        numeric("total", { precision: 10, scale: 2 }).notNull(),
   mpPaymentId:  text("mp_payment_id"),
@@ -72,9 +72,9 @@ export const orders = pgTable("orders", {
 });
 
 export const orderItems = pgTable("order_items", {
-  id:            uuid("id").primaryKey().defaultRandom(),
-  orderId:       uuid("order_id").references(() => orders.id),
-  productId:     uuid("product_id").references(() => products.id),
+  id:            text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  orderId:       text("order_id").references(() => orders.id),
+  productId:     text("product_id").references(() => products.id),
   quantityKg:    numeric("quantity_kg", { precision: 10, scale: 3 }).notNull(),
   priceSnapshot: numeric("price_snapshot", { precision: 10, scale: 2 }).notNull(),
   unitPrice:     numeric("unit_price", { precision: 10, scale: 2 }).notNull(),
