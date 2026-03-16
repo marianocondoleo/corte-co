@@ -1,6 +1,7 @@
 "use client";
 import { useUser, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import CarritoIcon from "@/components/CarritoIcon";
 
 export default function Home() {
   const { user, isLoaded } = useUser();
@@ -47,6 +48,8 @@ return (
             >
               Catálogo
             </Link>
+            <CarritoIcon />
+
            {user ? (
   <div className="flex items-center gap-4">
     <Link
@@ -93,6 +96,7 @@ return (
               >
                 Ver catálogo
                 <span>→</span>
+                
               </Link>
               <Link
                 href="/pedidos"
@@ -124,6 +128,7 @@ return (
             >
               Ver catálogo
               <span>→</span>
+             
             </Link>
           </div>
         )}

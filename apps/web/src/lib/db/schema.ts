@@ -42,8 +42,7 @@ export const products = pgTable("products", {
 
 export const addresses = pgTable("addresses", {
   id:        text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  userId:    text("user_id").references(() => users.id),
-  street:    text("street").notNull(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),  street:    text("street").notNull(),
   number:    text("number").notNull(),
   floor:      text("floor"),
   postalCode: text("postal_code"),
@@ -64,7 +63,7 @@ export const deliveryZones = pgTable("delivery_zones", {
 
 export const orders = pgTable("orders", {
   id:           text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  userId:       text("user_id").references(() => users.id),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
   status:       orderStatusEnum("status").default("pending"),
   total:        numeric("total", { precision: 10, scale: 2 }).notNull(),
   mpPaymentId:  text("mp_payment_id"),
@@ -78,8 +77,8 @@ export const orders = pgTable("orders", {
 
 export const orderItems = pgTable("order_items", {
   id:            text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  orderId:       text("order_id").references(() => orders.id),
-  productId:     text("product_id").references(() => products.id),
+  orderId: text("order_id").references(() => orders.id, { onDelete: "cascade" }),
+  productId: text("product_id").references(() => products.id, { onDelete: "restrict" }),
   quantityKg:    numeric("quantity_kg", { precision: 10, scale: 3 }).notNull(),
   priceSnapshot: numeric("price_snapshot", { precision: 10, scale: 2 }).notNull(),
   unitPrice:     numeric("unit_price", { precision: 10, scale: 2 }).notNull(),
