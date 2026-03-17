@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { users, addresses } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -8,6 +8,25 @@ import { NextResponse } from "next/server";
 export async function GET() {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  // Sincronizar usuario con Neon si no existe
+  const existing = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  
+  if (!existing[0]) {
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const email = clerkUser.emailAddresses[0]?.emailAddress;
+    const phone = clerkUser.phoneNumbers[0]?.phoneNumber ?? null;
+
+    if (email) {
+      await db.insert(users).values({
+        id: userId,
+        email,
+        phone,
+        role: "customer",
+      }).onConflictDoNothing();
+    }
+  }
 
   const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   const address = await db.select().from(addresses).where(eq(addresses.userId, userId)).limit(1);
