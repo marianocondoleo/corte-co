@@ -83,3 +83,22 @@ export const orderItems = pgTable("order_items", {
   priceSnapshot: numeric("price_snapshot", { precision: 10, scale: 2 }).notNull(),
   unitPrice:     numeric("unit_price", { precision: 10, scale: 2 }).notNull(),
 });
+export const deliveryConfig = pgTable("delivery_config", {
+  id:        text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  type:      text("type").notNull(), // 'day' | 'slot'
+  value:     text("value").notNull(), // 'Lunes' | '8-12hs'
+  isActive:  boolean("is_active").default(true),
+  order:     integer("order").default(0),
+});
+
+export const paymentConfig = pgTable("payment_config", {
+  id:        text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  method:    text("method").notNull(), // 'efectivo' | 'transferencia' | etc
+  label:     text("label").notNull(),
+  icon:      text("icon"),
+  isActive:  boolean("is_active").default(true),
+  bankName:  text("bank_name"),
+  cbu:       text("cbu"),
+  alias:     text("alias"),
+  titular:   text("titular"),
+});

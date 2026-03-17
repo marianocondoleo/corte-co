@@ -2,9 +2,23 @@
 import { useUser, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import CarritoIcon from "@/components/CarritoIcon";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const { user, isLoaded } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoaded || !user) return;
+    fetch("/api/perfil")
+      .then(r => r.json())
+      .then(data => {
+        if (data.user?.role === "admin") {
+          router.push("/admin");
+        }
+      });
+  }, [isLoaded, user]);
 
   const bgImage = "url('https://images.pexels.com/photos/29095933/pexels-photo-29095933.jpeg?auto=compress&cs=tinysrgb&w=1800')";
 
@@ -16,7 +30,7 @@ export default function Home() {
     );
   }
 
-return (
+  return (
     <div className="relative min-h-screen bg-black overflow-hidden">
       {/* Imagen de fondo */}
       <div
@@ -49,25 +63,24 @@ return (
               Catálogo
             </Link>
             <CarritoIcon />
-
-           {user ? (
-  <div className="flex items-center gap-4">
-    <Link
-      href="/perfil"
-      className="text-white/50 hover:text-white text-xs tracking-widest uppercase font-light transition-colors"
-    >
-      Mi perfil
-    </Link>
-    <UserButton />
-  </div>
-) : (
-  <Link
-    href="/sign-in"
-    className="text-white/70 hover:text-white border border-white/20 hover:border-white/60 px-5 py-2 rounded-full text-xs tracking-widest uppercase font-light transition-all duration-300"
-  >
-    Ingresar
-  </Link>
-)}
+            {user ? (
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/perfil"
+                  className="text-white/50 hover:text-white text-xs tracking-widest uppercase font-light transition-colors"
+                >
+                  Mi perfil
+                </Link>
+                <UserButton />
+              </div>
+            ) : (
+              <Link
+                href="/sign-in"
+                className="text-white/70 hover:text-white border border-white/20 hover:border-white/60 px-5 py-2 rounded-full text-xs tracking-widest uppercase font-light transition-all duration-300"
+              >
+                Ingresar
+              </Link>
+            )}
           </div>
         </nav>
 
@@ -96,7 +109,6 @@ return (
               >
                 Ver catálogo
                 <span>→</span>
-                
               </Link>
               <Link
                 href="/pedidos"
@@ -128,14 +140,14 @@ return (
             >
               Ver catálogo
               <span>→</span>
-             
             </Link>
           </div>
         )}
 
         {/* Footer */}
-        <div className="flex justify-center pb-10">          
-          <p className="text-zinc-500 text-xs tracking-widest uppercase">            Calidad · Frescura · Confianza
+        <div className="flex justify-center pb-10">
+          <p className="text-zinc-500 text-xs tracking-widest uppercase">
+            Calidad · Frescura · Confianza
           </p>
         </div>
 
