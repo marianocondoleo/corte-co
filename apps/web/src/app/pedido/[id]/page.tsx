@@ -14,11 +14,19 @@ export default function PedidoConfirmadoPage() {
   const searchParams = useSearchParams();
   const mpStatus = searchParams.get("status");
   const [order, setOrder] = useState<Order | null>(null);
+  const [waNumber, setWaNumber] = useState("5491100000000");
 
   useEffect(() => {
     fetch(`/api/pedidos/${id}`)
       .then(r => r.json())
       .then(setOrder);
+
+    fetch("/api/config")
+      .then(r => r.json())
+      .then(data => {
+        const t = data.pagos.find((m: any) => m.method === "transferencia");
+        if (t?.whatsapp) setWaNumber(t.whatsapp);
+      });
   }, [id]);
 
   const getMensaje = () => {
@@ -26,7 +34,7 @@ export default function PedidoConfirmadoPage() {
 
     if (order.metodoPago === "efectivo") {
       return {
-        titulo: "¡Pedido confirmado!",
+        titulo: "Pedido confirmado",
         desc: "Abonás en efectivo al momento de la entrega.",
         color: "text-green-400",
       };
@@ -40,7 +48,7 @@ export default function PedidoConfirmadoPage() {
     }
     if (mpStatus === "approved") {
       return {
-        titulo: "¡Pago acreditado!",
+        titulo: "Pago acreditado",
         desc: "Tu pago fue procesado exitosamente.",
         color: "text-green-400",
       };
@@ -48,19 +56,19 @@ export default function PedidoConfirmadoPage() {
     if (mpStatus === "pending") {
       return {
         titulo: "Pago en proceso",
-        desc: "Tu pago está siendo procesado. Te avisamos cuando se acredite.",
+        desc: "Tu pago esta siendo procesado. Te avisamos cuando se acredite.",
         color: "text-orange-400",
       };
     }
     if (mpStatus === "failure") {
       return {
         titulo: "Pago rechazado",
-        desc: "Hubo un problema con el pago. Podés intentarlo nuevamente.",
+        desc: "Hubo un problema con el pago. Podes intentarlo nuevamente.",
         color: "text-red-400",
       };
     }
     return {
-      titulo: "¡Gracias por tu compra!",
+      titulo: "Gracias por tu compra",
       desc: "Tu pedido fue recibido correctamente.",
       color: "text-white",
     };
@@ -68,6 +76,8 @@ export default function PedidoConfirmadoPage() {
 
   const mensaje = getMensaje();
   const pedidoId = String(id).slice(0, 8).toUpperCase();
+  const waText = "Hola! Te envio el comprobante del pedido " + pedidoId;
+  const waUrl = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(waText);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-10">
@@ -75,7 +85,7 @@ export default function PedidoConfirmadoPage() {
         <div className={`w-16 h-16 rounded-full border flex items-center justify-center mx-auto mb-8 text-2xl ${
           mpStatus === "failure" ? "border-red-400/30" : "border-white/20"
         }`}>
-          {mpStatus === "failure" ? "✕" : "✓"}
+          {mpStatus === "failure" ? "x" : "v"}
         </div>
 
         <p className="text-white/30 tracking-[0.4em] uppercase text-xs mb-4">
@@ -83,7 +93,7 @@ export default function PedidoConfirmadoPage() {
         </p>
 
         <h1
-          className={`text-4xl font-light mb-4 ${mensaje?.color ?? "text-white"}`}
+          className={"text-4xl font-light mb-4 " + (mensaje?.color ?? "text-white")}
           style={{ fontFamily: "Georgia, serif" }}
         >
           {mensaje?.titulo}
@@ -92,7 +102,7 @@ export default function PedidoConfirmadoPage() {
         <div className="w-8 h-px bg-white/20 mx-auto my-6" />
 
         <p className="text-white/40 text-sm font-light mb-2">
-          Número de pedido
+          Numero de pedido
         </p>
         <p className="text-white/60 text-xs font-mono mb-6">
           {pedidoId}
@@ -103,14 +113,16 @@ export default function PedidoConfirmadoPage() {
         </p>
 
         {order?.metodoPago === "transferencia" && (
-          <a
-            href={`https://wa.me/5491100000000?text=Hola! Te envío el comprobante del pedido ${pedidoId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-full text-xs tracking-widest uppercase font-medium transition-all duration-300 mb-8"
-          >
-            📲 Enviar comprobante por WhatsApp
-          </a>
+          <div className="mb-8">
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-full text-xs tracking-widest uppercase font-medium transition-all duration-300"
+            >
+              Enviar comprobante por WhatsApp
+            </a>
+          </div>
         )}
 
         <div className="flex flex-col gap-3 items-center mt-4">

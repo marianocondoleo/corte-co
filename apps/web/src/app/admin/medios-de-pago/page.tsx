@@ -12,14 +12,14 @@ type PaymentMethod = {
   cbu: string | null;
   alias: string | null;
   titular: string | null;
+  whatsapp: string | null;
 };
 
 export default function AdminMediosDePago() {
   const [medios, setMedios] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [editandoBanco, setEditandoBanco] = useState(false);
-  const [banco, setBanco] = useState({ bankName: "", cbu: "", alias: "", titular: "" });
-  const [saving, setSaving] = useState(false);
+const [banco, setBanco] = useState({ bankName: "", cbu: "", alias: "", titular: "", whatsapp: "" });  const [saving, setSaving] = useState(false);
 
   useEffect(() => { cargar(); }, []);
 
@@ -35,6 +35,7 @@ export default function AdminMediosDePago() {
             cbu: transferencia.cbu ?? "",
             alias: transferencia.alias ?? "",
             titular: transferencia.titular ?? "",
+            whatsapp: transferencia.whatsapp ?? "",
           });
         }
         setLoading(false);
@@ -123,6 +124,7 @@ export default function AdminMediosDePago() {
                     { label: "CBU", key: "cbu", placeholder: "22 dígitos" },
                     { label: "Alias", key: "alias", placeholder: "Ej: CORTE.CO.MP" },
                     { label: "Titular", key: "titular", placeholder: "Nombre del titular" },
+                    { label: "WhatsApp", key: "whatsapp", placeholder: "Ej: 5491112345678" },
                   ].map(field => (
                     <div key={field.key} className="flex flex-col gap-2">
                       <label className="text-white/30 text-xs tracking-widest uppercase">{field.label}</label>
@@ -149,6 +151,7 @@ export default function AdminMediosDePago() {
                     { label: "CBU", value: transferencia?.cbu },
                     { label: "Alias", value: transferencia?.alias },
                     { label: "Titular", value: transferencia?.titular },
+                    { label: "WA", value: transferencia?.whatsapp },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center gap-4 py-2 border-b border-white/5">
                       <span className="text-white/20 w-16 text-xs tracking-widest uppercase">{item.label}</span>

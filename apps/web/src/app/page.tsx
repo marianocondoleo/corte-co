@@ -33,16 +33,19 @@ export default function Home() {
   return (
     <div className="relative min-h-screen bg-black overflow-hidden">
       {/* Imagen de fondo */}
-      <div
-        className="absolute inset-0 scale-105"
-        style={{
-          backgroundImage: bgImage,
-          filter: user ? "brightness(0.5) saturate(0.9)" : "brightness(0.4) saturate(0.9)",
-          backgroundSize: "50%",
-          backgroundPosition: "center center",
-          backgroundRepeat: "no-repeat",
-        }}
-      />
+   <div
+  className="absolute inset-0"
+  style={{
+    backgroundImage: bgImage,
+    filter: user ? "brightness(0.5) saturate(0.9)" : "brightness(0.4) saturate(0.9)",
+    backgroundSize: "55%",
+    backgroundPosition: "center center",
+    backgroundRepeat: "no-repeat",
+  }}
+/>
+<div className="absolute inset-0" style={{
+  background: "radial-gradient(ellipse 55% 70% at 50% 50%, transparent 30%, black 75%)",
+}} />
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/60" />
 
       <div className="relative z-10 flex flex-col min-h-screen">

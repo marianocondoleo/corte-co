@@ -101,4 +101,5 @@ export const paymentConfig = pgTable("payment_config", {
   cbu:       text("cbu"),
   alias:     text("alias"),
   titular:   text("titular"),
+  whatsapp: text("whatsapp"),
 });
