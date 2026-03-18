@@ -3,6 +3,7 @@ import { useUser, UserButton } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import CarritoIcon from "@/components/CarritoIcon";
+import Navbar from "@/components/Navbar";
 
 type Product = {
   id: string;
@@ -33,34 +34,7 @@ export default function CatalogoPage() {
   return (
     <div className="min-h-screen bg-black text-white">
 
-      {/* Navbar */}
-      <nav className="flex items-center justify-between px-10 py-8 border-b border-white/5">
-        <Link
-          href="/"
-          className="text-white tracking-[0.3em] uppercase text-sm font-light"
-          style={{ fontFamily: "Georgia, serif" }}
-        >
-          Corte & Co.
-        </Link>
-        <div className="flex items-center gap-6">
-          <CarritoIcon />  
-          {user ? (
-            <>
-              <Link href="/perfil" className="text-white/40 hover:text-white text-xs tracking-widest uppercase font-light transition-colors">
-                Mi perfil
-              </Link>
-              <UserButton />
-            </>
-          ) : (
-            <Link
-              href="/sign-in"
-              className="text-white/70 hover:text-white border border-white/20 hover:border-white/60 px-5 py-2 rounded-full text-xs tracking-widest uppercase font-light transition-all duration-300"
-            >
-              Ingresar
-            </Link>
-          )}
-        </div>
-      </nav>
+    <Navbar />
 
       <div className="max-w-6xl mx-auto px-10 py-16">
 

@@ -2,6 +2,7 @@
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 
 type ProfileData = {
   phone: string;
@@ -60,22 +61,7 @@ export default function PerfilPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Navbar */}
-      <nav className="flex items-center justify-between px-10 py-8 border-b border-white/5">
-        <Link
-          href="/"
-          className="text-white tracking-[0.3em] uppercase text-sm font-light"
-          style={{ fontFamily: "Georgia, serif" }}
-        >
-          Corte & Co.
-        </Link>
-        <Link
-          href="/catalogo"
-          className="text-white/40 hover:text-white text-xs tracking-widest uppercase font-light transition-colors"
-        >
-          ← Volver al catálogo
-        </Link>
-      </nav>
+    <Navbar />
 
       <div className="max-w-xl mx-auto px-10 py-16">
 
@@ -100,9 +86,23 @@ export default function PerfilPage() {
             : "bg-white/5 border border-white/20 text-white/70"
         }`}>
           <div className={`w-2 h-2 rounded-full ${isComplete ? "bg-green-500" : "bg-orange-400"}`} />
-          {isComplete
-            ? "Perfil completo — podés realizar pedidos"
-            : "Completá tu perfil para poder hacer pedidos"}
+          {isComplete ? (
+  "Perfil completo — podés realizar pedidos"
+) : (
+  <span>
+    Completá tu perfil para poder hacer pedidos.{" "}
+    <span className="text-orange-300">
+      Falta: {[
+        !form.phone && "teléfono",
+        !form.dni && "DNI",
+        !form.street && "calle",
+        !form.number && "número",
+        !form.city && "ciudad",
+        !form.postalCode && "código postal",
+      ].filter(Boolean).join(", ")}
+    </span>
+  </span>
+)}
         </div>
 
         {loading ? (

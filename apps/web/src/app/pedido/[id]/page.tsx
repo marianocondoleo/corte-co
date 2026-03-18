@@ -34,7 +34,7 @@ export default function PedidoConfirmadoPage() {
     if (order.metodoPago === "transferencia") {
       return {
         titulo: "Pedido recibido",
-        desc: "Envianos el comprobante de transferencia por WhatsApp para confirmar tu pedido.",
+        desc: "Para confirmar tu pedido necesitamos el comprobante de transferencia.",
         color: "text-orange-400",
       };
     }
@@ -67,6 +67,7 @@ export default function PedidoConfirmadoPage() {
   };
 
   const mensaje = getMensaje();
+  const pedidoId = String(id).slice(0, 8).toUpperCase();
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-10">
@@ -94,23 +95,25 @@ export default function PedidoConfirmadoPage() {
           Número de pedido
         </p>
         <p className="text-white/60 text-xs font-mono mb-6">
-          {String(id).slice(0, 8).toUpperCase()}
+          {pedidoId}
         </p>
 
-        <p className="text-white/30 text-sm font-light mb-10 leading-relaxed">
+        <p className="text-white/30 text-sm font-light mb-8 leading-relaxed">
           {mensaje?.desc}
         </p>
-          {order?.metodoPago === "transferencia" && (
-  
-    href="https://wa.me/5491100000000?text=Hola! Te envío el comprobante del pedido ${String(id).slice(0, 8).toUpperCase()}"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="inline-flex items-center gap-3 bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-full text-xs tracking-widest uppercase font-medium transition-all duration-300 mb-8"
-  >
-    📲 Enviar comprobante por WhatsApp
-  </a>
-)}
-        <div className="flex flex-col gap-3 items-center">
+
+        {order?.metodoPago === "transferencia" && (
+          <a
+            href={`https://wa.me/5491100000000?text=Hola! Te envío el comprobante del pedido ${pedidoId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-3 bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-full text-xs tracking-widest uppercase font-medium transition-all duration-300 mb-8"
+          >
+            📲 Enviar comprobante por WhatsApp
+          </a>
+        )}
+
+        <div className="flex flex-col gap-3 items-center mt-4">
           <Link
             href="/pedidos"
             className="inline-flex items-center gap-3 bg-white text-black px-8 py-3 rounded-full text-xs tracking-widest uppercase font-medium hover:bg-zinc-200 transition-all duration-300"

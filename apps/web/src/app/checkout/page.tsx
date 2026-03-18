@@ -3,7 +3,7 @@ import { useUser, UserButton } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import CarritoIcon from "@/components/CarritoIcon";
+import Navbar from "@/components/Navbar";
 
 type ItemCarrito = {
   id: string;
@@ -23,20 +23,48 @@ type Perfil = {
   postalCode: string;
 };
 
-const FRANJAS = ["8-12hs", "12-16hs", "16-20hs"];
+type ConfigItem = {
+  id: string;
+  type: string;
+  value: string;
+};
 
-function getFechasDisponibles() {
+type PaymentMethod = {
+  id: string;
+  method: string;
+  label: string;
+  icon: string;
+  isActive: boolean;
+};
+
+type BankData = {
+  bankName: string | null;
+  cbu: string | null;
+  alias: string | null;
+  titular: string | null;
+};
+
+function getFechasDisponibles(diasActivos: string[]) {
+  if (!diasActivos.length) return [];
+
   const fechas = [];
   const hoy = new Date();
   let dia = new Date(hoy);
   dia.setDate(dia.getDate() + 1);
+  let intentos = 0;
 
-  while (fechas.length < 10) {
-    const dow = dia.getDay();
-    if (dow >= 1 && dow <= 6) {
+  const DIAS_MAP: Record<number, string> = {
+    0: "Domingo", 1: "Lunes", 2: "Martes", 3: "Miércoles",
+    4: "Jueves", 5: "Viernes", 6: "Sábado"
+  };
+
+  while (fechas.length < 10 && intentos < 60) {
+    const nombreDia = DIAS_MAP[dia.getDay()];
+    if (diasActivos.includes(nombreDia)) {
       fechas.push(new Date(dia));
     }
     dia.setDate(dia.getDate() + 1);
+    intentos++;
   }
   return fechas;
 }
@@ -59,32 +87,51 @@ export default function CheckoutPage() {
   const [perfilCompleto, setPerfilCompleto] = useState(false);
   const [fechaSeleccionada, setFechaSeleccionada] = useState("");
   const [franjaSeleccionada, setFranjaSeleccionada] = useState("");
-  const [notas, setNotas] = useState("");
   const [metodoPago, setMetodoPago] = useState("");
+  const [notas, setNotas] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const fechas = getFechasDisponibles();
+  const [diasActivos, setDiasActivos] = useState<string[]>([]);
+  const [franjasActivas, setFranjasActivas] = useState<string[]>([]);
+  const [metodosPago, setMetodosPago] = useState<PaymentMethod[]>([]);
+  const [bankData, setBankData] = useState<BankData | null>(null);
 
   useEffect(() => {
     const raw = localStorage.getItem("carrito");
     setItems(raw ? JSON.parse(raw) : []);
 
+    // Cargar perfil
     fetch("/api/perfil")
       .then(r => r.json())
       .then(data => {
-        const p = {
-          phone: data.user?.phone ?? "",
-          dni: data.user?.dni ?? "",
-          street: data.address?.street ?? "",
-          number: data.address?.number ?? "",
-          floor: data.address?.floor ?? "",
-          city: data.address?.city ?? "",
-          postalCode: data.address?.postalCode ?? "",
-        };
+            const p = {
+        phone: data.user?.phone ?? "",
+        dni: data.user?.dni ?? "",
+        street: data.address?.street ?? "",
+        number: data.address?.number ?? "",
+        floor: data.address?.floor ?? "",
+        city: data.address?.city ?? "",
+        postalCode: data.address?.postalCode ?? data.address?.postal_code ?? "",
+      };
         setPerfil(p);
         setPerfilCompleto(!!(p.phone && p.dni && p.street && p.number && p.city && p.postalCode));
       });
+
+    // Cargar config dinámica
+fetch("/api/config")
+  .then(r => r.json())
+  .then(data => {
+    setDiasActivos(data.dias.filter((d: ConfigItem) => d.type === "day").map((d: ConfigItem) => d.value));
+    setFranjasActivas(data.dias.filter((d: ConfigItem) => d.type === "slot").map((d: ConfigItem) => d.value));
+    setMetodosPago(data.pagos);
+    const t = data.pagos.find((m: any) => m.method === "transferencia");
+    if (t) setBankData({ bankName: t.bankName, cbu: t.cbu, alias: t.alias, titular: t.titular });
+  });
+
+
   }, []);
+
+  const fechas = getFechasDisponibles(diasActivos);
 
   const total = items.reduce((acc, item) => {
     return acc + Number(item.pricePerKg) * item.cantidad;
@@ -92,13 +139,13 @@ export default function CheckoutPage() {
 
   const handleConfirmar = async () => {
     if (!fechaSeleccionada || !franjaSeleccionada) {
-  setError("Seleccioná fecha y franja horaria");
-  return;
-}
-if (!metodoPago) {
-  setError("Seleccioná un método de pago");
-  return;
-}
+      setError("Seleccioná fecha y franja horaria");
+      return;
+    }
+    if (!metodoPago) {
+      setError("Seleccioná un método de pago");
+      return;
+    }
     setError("");
     setLoading(true);
 
@@ -117,15 +164,15 @@ if (!metodoPago) {
     const data = await res.json();
     setLoading(false);
 
-if (data.ok) {
-  localStorage.removeItem("carrito");
-  window.dispatchEvent(new Event("carrito-actualizado"));
-  if (data.redirect) {
-    window.location.href = data.redirect; // MercadoPago
-  } else {
-    router.push(`/pedido/${data.orderId}`);
-  }
-} else {
+    if (data.ok) {
+      localStorage.removeItem("carrito");
+      window.dispatchEvent(new Event("carrito-actualizado"));
+      if (data.redirect) {
+        window.location.href = data.redirect;
+      } else {
+        router.push(`/pedido/${data.orderId}`);
+      }
+    } else {
       setError(data.error ?? "Error al confirmar el pedido");
     }
   };
@@ -140,36 +187,14 @@ if (data.ok) {
 
   return (
     <div className="min-h-screen bg-black text-white">
-
-      {/* Navbar */}
-      <nav className="flex items-center justify-between px-10 py-8 border-b border-white/5">
-        <Link
-          href="/"
-          className="text-white tracking-[0.3em] uppercase text-sm font-light"
-          style={{ fontFamily: "Georgia, serif" }}
-        >
-          Corte & Co.
-        </Link>
-        <div className="flex items-center gap-6">
-          <Link href="/carrito" className="text-white/40 hover:text-white text-xs tracking-widest uppercase font-light transition-colors">
-            ← Carrito
-          </Link>
-          <CarritoIcon />
-          {user && <UserButton />}
-        </div>
-      </nav>
+      <Navbar />
 
       <div className="max-w-4xl mx-auto px-10 py-16">
 
         {/* Header */}
         <div className="mb-12">
-          <p className="text-white/30 tracking-[0.4em] uppercase text-xs mb-4">
-            Último paso
-          </p>
-          <h1
-            className="text-white text-5xl font-light"
-            style={{ fontFamily: "Georgia, serif" }}
-          >
+          <p className="text-white/30 tracking-[0.4em] uppercase text-xs mb-4">Último paso</p>
+          <h1 className="text-white text-5xl font-light" style={{ fontFamily: "Georgia, serif" }}>
             Checkout
           </h1>
           <div className="w-8 h-px bg-white/20 mt-4" />
@@ -182,9 +207,7 @@ if (data.ok) {
 
             {/* Perfil */}
             <div>
-              <p className="text-white/30 tracking-[0.3em] uppercase text-xs mb-5">
-                Datos de entrega
-              </p>
+              <p className="text-white/30 tracking-[0.3em] uppercase text-xs mb-5">Datos de entrega</p>
               {perfilCompleto && perfil ? (
                 <div className="border border-white/10 rounded-lg p-5 flex flex-col gap-2">
                   <div className="flex items-center justify-between mb-2">
@@ -217,9 +240,7 @@ if (data.ok) {
 
             {/* Fecha */}
             <div>
-              <p className="text-white/30 tracking-[0.3em] uppercase text-xs mb-5">
-                Fecha de entrega
-              </p>
+              <p className="text-white/30 tracking-[0.3em] uppercase text-xs mb-5">Fecha de entrega</p>
               <div className="flex flex-col gap-2">
                 {fechas.slice(0, 6).map(fecha => (
                   <button
@@ -239,11 +260,9 @@ if (data.ok) {
 
             {/* Franja horaria */}
             <div>
-              <p className="text-white/30 tracking-[0.3em] uppercase text-xs mb-5">
-                Franja horaria
-              </p>
-              <div className="flex gap-3">
-                {FRANJAS.map(franja => (
+              <p className="text-white/30 tracking-[0.3em] uppercase text-xs mb-5">Franja horaria</p>
+              <div className="flex gap-3 flex-wrap">
+                {franjasActivas.map(franja => (
                   <button
                     key={franja}
                     onClick={() => setFranjaSeleccionada(franja)}
@@ -259,11 +278,63 @@ if (data.ok) {
               </div>
             </div>
 
+            {/* Método de pago */}
+            <div>
+              <p className="text-white/30 tracking-[0.3em] uppercase text-xs mb-5">Método de pago</p>
+              <div className="flex flex-col gap-2">
+                {metodosPago.map(medio => (
+                  <button
+                    key={medio.id}
+                    onClick={() => setMetodoPago(medio.method)}
+                    className={`flex items-center gap-4 px-5 py-4 rounded-lg border text-left transition-all duration-200 ${
+                      metodoPago === medio.method
+                        ? "bg-white text-black border-white"
+                        : "border-white/10 text-white/50 hover:border-white/30 hover:text-white"
+                    }`}
+                  >
+                    <span className="text-xl">{medio.icon}</span>
+                    <span className={`text-sm font-light ${metodoPago === medio.method ? "text-black" : "text-white"}`}>
+                      {medio.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Datos bancarios si elige transferencia */}
+              {metodoPago === "transferencia" && bankData && (bankData.cbu || bankData.alias) && (
+                <div className="mt-4 border border-white/10 rounded-lg p-4 flex flex-col gap-2">
+                  <p className="text-white/30 text-xs tracking-widest uppercase mb-2">Datos para transferir</p>
+                  {bankData.bankName && (
+                    <div className="flex gap-3 text-sm">
+                      <span className="text-white/20 w-16 text-xs tracking-widest uppercase">Banco</span>
+                      <span className="text-white/60">{bankData.bankName}</span>
+                    </div>
+                  )}
+                  {bankData.cbu && (
+                    <div className="flex gap-3 text-sm">
+                      <span className="text-white/20 w-16 text-xs tracking-widest uppercase">CBU</span>
+                      <span className="text-white/60 font-mono">{bankData.cbu}</span>
+                    </div>
+                  )}
+                  {bankData.alias && (
+                    <div className="flex gap-3 text-sm">
+                      <span className="text-white/20 w-16 text-xs tracking-widest uppercase">Alias</span>
+                      <span className="text-white/60">{bankData.alias}</span>
+                    </div>
+                  )}
+                  {bankData.titular && (
+                    <div className="flex gap-3 text-sm">
+                      <span className="text-white/20 w-16 text-xs tracking-widest uppercase">Titular</span>
+                      <span className="text-white/60">{bankData.titular}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Notas */}
             <div>
-              <p className="text-white/30 tracking-[0.3em] uppercase text-xs mb-5">
-                Notas (opcional)
-              </p>
+              <p className="text-white/30 tracking-[0.3em] uppercase text-xs mb-5">Notas (opcional)</p>
               <textarea
                 value={notas}
                 onChange={e => setNotas(e.target.value)}
@@ -274,46 +345,10 @@ if (data.ok) {
             </div>
 
           </div>
-          {/* Método de pago */}
-<div>
-  <p className="text-white/30 tracking-[0.3em] uppercase text-xs mb-5">
-    Método de pago
-  </p>
-  <div className="flex flex-col gap-2">
-    {[
-      { id: "mercadopago", label: "MercadoPago", icon: "💳", desc: "Pagá con tu cuenta MP" },
-      { id: "tarjeta", label: "Tarjeta", icon: "🏦", desc: "Crédito o débito" },
-      { id: "transferencia", label: "Transferencia", icon: "🔄", desc: "CBU / Alias" },
-      { id: "efectivo", label: "Efectivo", icon: "💵", desc: "Al momento de la entrega" },
-    ].map(metodo => (
-      <button
-        key={metodo.id}
-        onClick={() => setMetodoPago(metodo.id)}
-        className={`flex items-center gap-4 px-5 py-4 rounded-lg border text-left transition-all duration-200 ${
-          metodoPago === metodo.id
-            ? "bg-white text-black border-white"
-            : "border-white/10 text-white/50 hover:border-white/30 hover:text-white"
-        }`}
-      >
-        <span className="text-xl">{metodo.icon}</span>
-        <div>
-          <p className={`text-sm font-light ${metodoPago === metodo.id ? "text-black" : "text-white"}`}>
-            {metodo.label}
-          </p>
-          <p className={`text-xs ${metodoPago === metodo.id ? "text-black/50" : "text-white/30"}`}>
-            {metodo.desc}
-          </p>
-        </div>
-      </button>
-    ))}
-  </div>
-</div>
 
           {/* Columna derecha — resumen */}
           <div>
-            <p className="text-white/30 tracking-[0.3em] uppercase text-xs mb-5">
-              Resumen del pedido
-            </p>
+            <p className="text-white/30 tracking-[0.3em] uppercase text-xs mb-5">Resumen del pedido</p>
             <div className="border border-white/10 rounded-lg overflow-hidden">
               {items.map(item => (
                 <div key={item.id} className="flex items-center gap-4 p-4 border-b border-white/5">
@@ -350,7 +385,11 @@ if (data.ok) {
             </button>
 
             <p className="text-white/20 text-xs text-center mt-4">
-              El pago se procesa via MercadoPago en el siguiente paso
+              {metodoPago === "mercadopago" || metodoPago === "tarjeta"
+                ? "Serás redirigido a MercadoPago para completar el pago"
+                : metodoPago === "transferencia"
+                ? "Recordá enviar el comprobante para confirmar tu pedido"
+                : "El pago se realiza al momento de la entrega"}
             </p>
           </div>
         </div>
