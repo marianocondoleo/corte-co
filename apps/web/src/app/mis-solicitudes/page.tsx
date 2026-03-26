@@ -12,7 +12,7 @@ type Solicitud = {
   medicoNombre?: string;
   notas?: string;
   precioProducto?: string;
-  precioEnvio?: string;
+  precioEnvio?: string | number | null;
   precioTotal?: string;
   envioModalidad?: string;
   envioTracking?: string;
@@ -49,36 +49,31 @@ export default function MisSolicitudesPage() {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  // Mapea estados a colores
   const statusColors: Record<string, string> = {
-    enviada: "bg-blue-500 text-white",
-    aprobada_pendiente_pago: "bg-yellow-400 text-black",
-    en_produccion: "bg-purple-500 text-white",
-    despachado: "bg-indigo-500 text-white",
-    recibida: "bg-green-500 text-white",
-    cancelada: "bg-red-500 text-white",
+    solicitud_enviada: "bg-blue-500 text-white-100",
+    aprobada_pendiente_pago: "bg-yellow-400 text-white-100",
+    en_produccion: "bg-purple-500 text-yellow",
+    despachado: "bg-indigo-500 text-green-100",
+    recibida: "bg-green-500 text-green-100",
+    cancelada: "bg-red-500 text-red-100",
   };
 
   return (
     <div className="space-y-6 min-h-screen bg-gray-900 p-4">
-      {/* Navbar siempre visible */}
       <Navbar />
 
-      {/* Loading */}
       {loading && (
         <p className="text-white text-center mt-10 text-lg">
           Cargando solicitudes...
         </p>
       )}
 
-      {/* No hay solicitudes */}
       {!loading && solicitudes.length === 0 && (
         <p className="text-white text-center mt-10 text-lg">
           No hay solicitudes para mostrar.
         </p>
       )}
 
-      {/* Listado de solicitudes */}
       {!loading &&
         solicitudes.length > 0 &&
         solicitudes.map((s) => (
@@ -86,7 +81,6 @@ export default function MisSolicitudesPage() {
             key={s.id}
             className="bg-white/5 border border-white/10 rounded-2xl shadow-md p-4 transition-transform hover:scale-[1.01]"
           >
-            {/* Header */}
             <div
               className="flex justify-between items-center cursor-pointer"
               onClick={() => toggleExpand(s.id)}
@@ -116,7 +110,6 @@ export default function MisSolicitudesPage() {
               </div>
             </div>
 
-            {/* Contenido expandido */}
             {expandedId === s.id && (
               <div className="mt-4 text-sm text-white/60 space-y-2 border-t border-white/10 pt-3">
                 <p>
@@ -140,7 +133,7 @@ export default function MisSolicitudesPage() {
                     <strong>Precio Producto:</strong> ${s.precioProducto}
                   </p>
                 )}
-                {s.precioEnvio && (
+                {s.precioEnvio != null && Number(s.precioEnvio) > 0 && ( // <--- Cambio clave
                   <p>
                     <strong>Precio Envío:</strong> ${s.precioEnvio}
                   </p>

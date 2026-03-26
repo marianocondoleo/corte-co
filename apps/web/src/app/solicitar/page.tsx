@@ -1,13 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useUser, UserButton } from "@clerk/nextjs";
-import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
 import Navbar from "@/components/Navbar";
+
+type ProfileData = {
+  name: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  street: string;
+  number: string;
+  floor?: string;
+  city: string;
+  postalCode: string;
+};
 
 export default function Solicitar() {
   const { user } = useUser();
-
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -20,10 +30,36 @@ export default function Solicitar() {
     file: null as File | null,
   });
 
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
+  // Traer productos
   useEffect(() => {
     fetch("/api/products")
       .then(res => res.json())
       .then(setProducts);
+  }, []);
+
+  // Traer perfil del usuario
+  useEffect(() => {
+    fetch("/api/perfil")
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) {
+          setProfile({
+            name: data.user.name || "",
+            lastName: data.user.lastName || "",
+            email: data.user.email || "",
+            phone: data.user.phone || "",
+            street: data.address?.street || "",
+            number: data.address?.number || "",
+            floor: data.address?.floor || "",
+            city: data.address?.city || "",
+            postalCode: data.address?.postalCode || "",
+          });
+        }
+        setLoadingProfile(false);
+      });
   }, []);
 
   const handleSubmit = async () => {
@@ -53,6 +89,7 @@ export default function Solicitar() {
 
     if (data.success) {
       alert("Solicitud enviada correctamente");
+      setForm({ ...form, productId: "", talle: "", unidad: "cm", medicoNombre: "", notas: "", file: null });
     } else {
       alert(data.error);
     }
@@ -60,14 +97,11 @@ export default function Solicitar() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-
       <Navbar />
 
-      {/* CONTENIDO */}
       <div className="flex justify-center px-6 pb-20">
         <div className="w-full max-w-xl space-y-12">
-
-          {/* TITULO PRO */}
+          {/* TITULO */}
           <div className="text-center mt-10">
             <h1
               className="text-white text-5xl font-light mb-4"
@@ -78,19 +112,31 @@ export default function Solicitar() {
             <div className="w-10 h-px bg-white/20 mx-auto" />
           </div>
 
-          {/* DATOS */}
+          {/* DATOS DEL CLIENTE */}
           <div className="border border-white/10 rounded-2xl p-6 space-y-3 bg-white/5">
             <p className="text-xs text-white/40 uppercase tracking-widest">
               Datos del cliente
             </p>
 
-            <p className="text-white">{user?.fullName}</p>
-            <p className="text-white/60 text-sm">
-              {user?.primaryEmailAddress?.emailAddress}
-            </p>
+            {loadingProfile ? (
+              <p className="text-white/60 text-sm">Cargando...</p>
+            ) : profile ? (
+              <>
+                <p className="text-white font-medium">
+                  {profile.name} {profile.lastName}
+                </p>
+                <p className="text-white/60 text-sm">{profile.email}</p>
+                <p className="text-white/60 text-sm">Tel: {profile.phone}</p>
+                <p className="text-white/60 text-sm">
+                  {profile.street} {profile.number} {profile.floor ? `, ${profile.floor}` : ""}, {profile.city} {profile.postalCode}
+                </p>
+              </>
+            ) : (
+              <p className="text-white/60 text-sm">No hay datos disponibles</p>
+            )}
           </div>
 
-          {/* FORM */}
+          {/* FORMULARIO */}
           <div className="space-y-8">
 
             {/* PRODUCTO */}
@@ -104,6 +150,7 @@ export default function Solicitar() {
                 onChange={(e) =>
                   setForm({ ...form, productId: e.target.value })
                 }
+                value={form.productId}
               >
                 <option value="">Seleccionar</option>
                 {products.map((p) => (
@@ -128,6 +175,7 @@ export default function Solicitar() {
                   onChange={(e) =>
                     setForm({ ...form, talle: e.target.value })
                   }
+                  value={form.talle}
                 />
 
                 <select
@@ -135,6 +183,7 @@ export default function Solicitar() {
                   onChange={(e) =>
                     setForm({ ...form, unidad: e.target.value })
                   }
+                  value={form.unidad}
                 >
                   <option value="cm">cm</option>
                   <option value="calzado">calzado</option>
@@ -152,16 +201,16 @@ export default function Solicitar() {
                 Orden médica
               </label>
 
-<label className="inline-flex items-center gap-4 border border-white/20 text-white/50 hover:text-white hover:border-white/60 px-6 py-3 text-xs tracking-widest uppercase rounded-full cursor-pointer transition">
-  Subir archivo →
-  <input
-    type="file"
-    className="hidden"
-    onChange={(e) =>
-      setForm({ ...form, file: e.target.files?.[0] || null })
-    }
-  />
-</label>
+              <label className="inline-flex items-center gap-4 border border-white/20 text-white/50 hover:text-white hover:border-white/60 px-6 py-3 text-xs tracking-widest uppercase rounded-full cursor-pointer transition">
+                Subir archivo →
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={(e) =>
+                    setForm({ ...form, file: e.target.files?.[0] || null })
+                  }
+                />
+              </label>
 
               {form.file && (
                 <p className="text-xs text-white/40">
@@ -182,6 +231,7 @@ export default function Solicitar() {
                 onChange={(e) =>
                   setForm({ ...form, medicoNombre: e.target.value })
                 }
+                value={form.medicoNombre}
               />
             </div>
 
@@ -197,17 +247,19 @@ export default function Solicitar() {
                 onChange={(e) =>
                   setForm({ ...form, notas: e.target.value })
                 }
+                value={form.notas}
               />
             </div>
 
             {/* BOTON FINAL */}
-<button
-  onClick={handleSubmit}
-  disabled={loading}
-  className="w-full inline-flex items-center justify-center gap-4 border border-white/20 text-white/50 hover:text-white hover:border-white/60 px-8 py-4 text-xs tracking-widest uppercase rounded-full transition"
->
-  {loading ? "Enviando..." : "Enviar solicitud →"}
-</button>
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full inline-flex items-center justify-center gap-4 border border-white/20 text-white/50 hover:text-white hover:border-white/60 px-8 py-4 text-xs tracking-widest uppercase rounded-full transition"
+            >
+              {loading ? "Enviando..." : "Enviar solicitud →"}
+            </button>
+
           </div>
         </div>
       </div>

@@ -18,7 +18,7 @@ export const userRoleEnum = pgEnum("user_role", [
 ]);
 
 export const solicitudStatusEnum = pgEnum("solicitud_status", [
-  "enviada",
+  "solicitud_enviada",
   "aprobada_pendiente_pago",
   "en_produccion",
   "despachado",
@@ -130,7 +130,7 @@ export const solicitudes = pgTable("solicitudes", {
     .references(() => products.id)
     .notNull(),
 
-  status: solicitudStatusEnum("status").default("enviada"),
+  status: solicitudStatusEnum("status").default("solicitud_enviada"),
 
   // Datos clínicos
   talle: text("talle").notNull(),

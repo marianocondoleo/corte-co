@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Corte & Co.",
-  description: "Carne premium. Puerta a puerta.",
+  title: "Condoleo. Cuida tu pisada.",
+  description: "Cuida tu pisada con nosotros",
 };
 
 export default function RootLayout({

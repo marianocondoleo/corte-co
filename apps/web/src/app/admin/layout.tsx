@@ -2,7 +2,6 @@
 
 import { ReactNode } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 
 type Props = {
@@ -10,10 +9,6 @@ type Props = {
 };
 
 export default function AdminLayout({ children }: Props) {
-  const pathname = usePathname();
-
-  const isActive = (href: string) => pathname === href;
-
   const links = [
     { href: "/admin/solicitudes", label: "Solicitudes", emoji: "📋" },
     { href: "/admin/envios", label: "Envios", emoji: "📦" },
@@ -44,11 +39,7 @@ export default function AdminLayout({ children }: Props) {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm uppercase font-light transition-colors ${
-                  isActive(link.href)
-                    ? "bg-[#6294A0] text-black"
-                    : "hover:bg-white/10"
-                }`}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm uppercase font-light transition-colors hover:bg-white/10"
               >
                 <span>{link.emoji}</span>
                 <span>{link.label}</span>

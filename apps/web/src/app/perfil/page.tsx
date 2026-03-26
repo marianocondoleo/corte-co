@@ -1,10 +1,11 @@
 "use client";
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import Navbar from "@/components/Navbar";
 
 type ProfileData = {
+  name: string;
+  lastName: string;
   phone: string;
   dni: string;
   street: string;
@@ -20,8 +21,15 @@ export default function PerfilPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [form, setForm] = useState<ProfileData>({
-    phone: "", dni: "", street: "", number: "",
-    floor: "", city: "", postalCode: "",
+    name: "",
+    lastName: "",
+    phone: "",
+    dni: "",
+    street: "",
+    number: "",
+    floor: "",
+    city: "",
+    postalCode: "",
   });
 
   useEffect(() => {
@@ -29,6 +37,8 @@ export default function PerfilPage() {
       .then(r => r.json())
       .then(data => {
         setForm({
+          name: data.user?.name ?? "",
+          lastName: data.user?.lastName ?? "",
           phone: data.user?.phone ?? "",
           dni: data.user?.dni ?? "",
           street: data.address?.street ?? "",
@@ -57,11 +67,11 @@ export default function PerfilPage() {
     setTimeout(() => setSaved(false), 3000);
   };
 
-  const isComplete = form.phone && form.dni && form.street && form.number && form.city && form.postalCode;
+  const isComplete = form.name && form.lastName && form.phone && form.dni && form.street && form.number && form.city && form.postalCode;
 
   return (
     <div className="min-h-screen bg-black text-white">
-    <Navbar />
+      <Navbar />
 
       <div className="max-w-xl mx-auto px-10 py-16">
 
@@ -70,10 +80,7 @@ export default function PerfilPage() {
           <p className="text-white/30 tracking-[0.4em] uppercase text-xs mb-4">
             {user?.emailAddresses[0]?.emailAddress}
           </p>
-          <h1
-            className="text-white text-4xl font-light"
-            style={{ fontFamily: "Georgia, serif" }}
-          >
+          <h1 className="text-white text-4xl font-light" style={{ fontFamily: "Georgia, serif" }}>
             Mi perfil
           </h1>
           <div className="w-8 h-px bg-white/20 mt-4" />
@@ -87,22 +94,24 @@ export default function PerfilPage() {
         }`}>
           <div className={`w-2 h-2 rounded-full ${isComplete ? "bg-green-500" : "bg-orange-400"}`} />
           {isComplete ? (
-  "Perfil completo — podés realizar pedidos"
-) : (
-  <span>
-    Completá tu perfil para poder hacer pedidos.{" "}
-    <span className="text-orange-300">
-      Falta: {[
-        !form.phone && "teléfono",
-        !form.dni && "DNI",
-        !form.street && "calle",
-        !form.number && "número",
-        !form.city && "ciudad",
-        !form.postalCode && "código postal",
-      ].filter(Boolean).join(", ")}
-    </span>
-  </span>
-)}
+            "Perfil completo — podés realizar pedidos"
+          ) : (
+            <span>
+              Completá tu perfil para poder hacer pedidos.{" "}
+              <span className="text-orange-300">
+                Falta: {[
+                  !form.name && "nombre",
+                  !form.lastName && "apellido",
+                  !form.phone && "teléfono",
+                  !form.dni && "DNI",
+                  !form.street && "calle",
+                  !form.number && "número",
+                  !form.city && "ciudad",
+                  !form.postalCode && "código postal",
+                ].filter(Boolean).join(", ")}
+              </span>
+            </span>
+          )}
         </div>
 
         {loading ? (
@@ -116,6 +125,8 @@ export default function PerfilPage() {
                 Datos personales
               </p>
               <div className="flex flex-col gap-4">
+                <Field label="Nombre *" name="name" value={form.name} onChange={handleChange} placeholder="Ej: Juan" />
+                <Field label="Apellido *" name="lastName" value={form.lastName} onChange={handleChange} placeholder="Ej: Pérez" />
                 <Field label="Teléfono *" name="phone" value={form.phone} onChange={handleChange} placeholder="Ej: 1155667788" />
                 <Field label="DNI *" name="dni" value={form.dni} onChange={handleChange} placeholder="Ej: 35123456" />
               </div>
@@ -136,17 +147,6 @@ export default function PerfilPage() {
                   <Field label="Ciudad *" name="city" value={form.city} onChange={handleChange} placeholder="Ej: San Isidro" />
                   <Field label="Código Postal *" name="postalCode" value={form.postalCode} onChange={handleChange} placeholder="Ej: 1642" />
                 </div>
-              </div>
-            </div>
-
-            {/* Medio de pago */}
-            <div>
-              <p className="text-white/30 tracking-[0.3em] uppercase text-xs mb-5">
-                Medio de pago
-              </p>
-              <div className="flex items-center gap-3 px-5 py-4 border border-white/10 rounded-lg text-white/40 text-sm">
-                <span>💳</span>
-                Se configura al momento del checkout via MercadoPago
               </div>
             </div>
 

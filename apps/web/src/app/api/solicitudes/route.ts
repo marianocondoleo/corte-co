@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       notas: notas || null,
       precioProducto: product.price,   // <- aquí guardamos el precio real
       precioTotal: product.price,      // opcional, puede actualizarse después con envío
-      status: "enviada",
+      status: "solicitud_enviada",
     }).returning();
 
     // 📎 INSERT ARCHIVO EN TABLA RELACIONADA

@@ -4,6 +4,20 @@ import { useEffect, useState } from "react";
 
 type Solicitud = {
   id: string;
+  user?: {
+    name?: string;
+    last_name?: string;
+    phone?: string;
+    email?: string;
+    addresses?: {
+      id: string;
+      street?: string;
+      number?: string;
+      floor?: string;
+      city?: string;
+      postal_code?: string;
+    }[];
+  };
   talle: string;
   pie: string;
   status: string;
@@ -11,7 +25,6 @@ type Solicitud = {
   notas?: string;
   precio?: string;
   product?: { name: string; price: string };
-  user?: { email: string };
   files?: { url: string }[];
 };
 
@@ -19,7 +32,6 @@ export default function AdminSolicitudesPage() {
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Mapeo de estados a labels legibles
   const statusLabels: Record<string, string> = {
     enviada: "Enviada",
     aprobada_pendiente_pago: "Aprobada, Pendiente de Pago",
@@ -29,30 +41,13 @@ export default function AdminSolicitudesPage() {
     cancelada: "Cancelada",
   };
 
-  // 🔹 Fetch API
   const fetchSolicitudes = async () => {
     try {
       const res = await fetch("/api/admin/solicitudes");
-      
-      console.log("📍 Response status:", res.status);
-      
-      if (!res.ok) {
-        const error = await res.json();
-        console.error("❌ API Error:", error);
-        setSolicitudes([]);
-        return;
-      }
-
       const data = await res.json();
-
-      console.log("✅ DATA DE LA API:", data);
-      console.log("📊 Es array?", Array.isArray(data));
-      console.log("📊 Longitud:", data.length);
-
-      // Asegurarnos de que siempre sea un array
       setSolicitudes(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("❌ Error al cargar solicitudes:", error);
+      console.error(error);
       setSolicitudes([]);
     }
   };
@@ -61,36 +56,16 @@ export default function AdminSolicitudesPage() {
     fetchSolicitudes();
   }, []);
 
-  // 🔹 Expandir / colapsar solicitud
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  // 🔹 Actualizar estado de la solicitud
-  const updateStatus = async (id: string, status: string) => {
-    try {
-      await fetch(`/api/admin/solicitudes/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-
-      fetchSolicitudes();
-    } catch (error) {
-      console.error("Error actualizando estado:", error);
-    }
-  };
-
-  // 🔹 Agrupar solicitudes por status
-  const grouped = solicitudes.reduce<Record<string, Solicitud[]>>(
-    (acc, s) => {
-      const key = s.status || "sin_estado";
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(s);
-      return acc;
-    },
-    {}
-  );
+  const grouped = solicitudes.reduce<Record<string, Solicitud[]>>((acc, s) => {
+    const key = s.status || "sin_estado";
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(s);
+    return acc;
+  }, {});
 
   return (
     <div className="min-h-screen p-8 space-y-8">
@@ -100,7 +75,9 @@ export default function AdminSolicitudesPage() {
 
       {Object.keys(grouped).map((status) => (
         <div key={status}>
-          <h2 className="text-2xl font-semibold mb-4">{statusLabels[status] || status}</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            {statusLabels[status] || status}
+          </h2>
 
           <div className="space-y-4">
             {grouped[status].map((s) => (
@@ -108,96 +85,79 @@ export default function AdminSolicitudesPage() {
                 key={s.id}
                 className="border border-white/10 rounded-2xl p-4 bg-white/5"
               >
-                {/* Header de la solicitud */}
+                {/* Header con name + last_name y status */}
                 <div
-                  className="flex justify-between items-center cursor-pointer"
+                  className="flex justify-between items-start cursor-pointer"
                   onClick={() => toggleExpand(s.id)}
                 >
-                  <div>
-                    <p className="font-medium">{s.product?.name || "Producto"}</p>
-                    <p className="text-white/50 text-sm">{s.user?.email || "Usuario"}</p>
-                  </div>
-                  <span className="text-xs uppercase text-white/40">{statusLabels[s.status] || s.status}</span>
+                  <p className="text-lg font-bold">
+                    {`${s.user?.name || ""} ${s.user?.last_name || ""}`.trim() || "Usuario"}
+                  </p>
+                  <span className="text-xs uppercase text-white/40">
+                    {statusLabels[s.status] || s.status}
+                  </span>
                 </div>
 
                 {/* Detalles expandibles */}
                 {expandedId === s.id && (
-                  <div className="mt-4 text-sm text-white/60 space-y-2">
-                    <p>Talle: {s.talle}</p>
-                    <p>Pie: {s.pie}</p>
-                    {s.medicoNombre && <p>Médico: {s.medicoNombre}</p>}
-                    {s.notas && <p>Notas: {s.notas}</p>}
-                    {s.precio && <p>Precio: ${s.precio}</p>}
+                  <div className="mt-2 text-sm text-white/60">
+                    {/* Datos del usuario */}
+                    <div className="border-t border-white/20 pt-2 mb-4">
+                      <p className="font-semibold mb-2 text-white/80 text-sm uppercase">Datos</p>
+                      {s.user?.phone && <p>📞 {s.user.phone}</p>}
+                      {s.user?.email && <p>✉️ {s.user.email}</p>}
+                      {s.user?.addresses?.map((addr) => (
+                        <p key={addr.id}>
+                          🏠 {addr.street || ""} {addr.number || ""}
+                          {addr.floor ? `, Piso: ${addr.floor}` : ""}
+                          {addr.city ? `, ${addr.city}` : ""}
+                          {addr.postal_code ? `, CP: ${addr.postal_code}` : ""}
+                        </p>
+                      ))}
+                    </div>
 
-                    {s.files?.length > 0 && (
-                      <div>
-                        Archivos:
-                        {s.files.map((f, i) => (
-                          <a
-                            key={i}
-                            href={f.url}
-                            target="_blank"
-                            className="block text-[#6294A0] underline text-sm"
-                          >
-                            Ver archivo {i + 1}
-                          </a>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Acciones */}
-                    <div className="flex gap-2 mt-4 flex-wrap">
-                      {s.status === "enviada" && (
-                        <>
-                          <button
-                            onClick={() => updateStatus(s.id, "aprobada_pendiente_pago")}
-                            className="px-3 py-1 rounded-full bg-[#6294A0] text-white text-xs uppercase"
-                          >
-                            Aprobar
-                          </button>
-                          <button
-                            onClick={() => updateStatus(s.id, "cancelada")}
-                            className="px-3 py-1 rounded-full border border-white/20 text-xs uppercase"
-                          >
-                            Rechazar
-                          </button>
-                        </>
+                    {/* Solicitud */}
+                    <div className="border-t border-white/20 pt-2">
+                      <p className="font-semibold mb-2 text-white/80 text-sm uppercase">Solicitud</p>
+                      <p>Talle: {s.talle} ({s.pie})</p>
+                      {s.product && <p>Producto: {s.product.name}</p>}
+                      {s.files?.length > 0 && (
+                        <div className="mt-1">
+                          Archivos:
+                          {s.files.map((f, i) => (
+                            <a
+                              key={i}
+                              href={f.url}
+                              target="_blank"
+                              className="block underline text-sm text-white/60"
+                            >
+                              Ver archivo {i + 1}
+                            </a>
+                          ))}
+                        </div>
                       )}
+                      {s.medicoNombre && <p>Médico: {s.medicoNombre}</p>}
+                      {s.notas && <p>Notas: {s.notas}</p>}
+                      {s.precio && <p>Precio: ${s.precio}</p>}
+                    </div>
 
-                      {s.status === "aprobada_pendiente_pago" && (
-                        <button
-                          onClick={() => updateStatus(s.id, "cancelada")}
-                          className="px-3 py-1 rounded-full border border-white/20 text-xs uppercase"
-                        >
-                          Cancelar
-                        </button>
-                      )}
-
-                      {s.status === "en_produccion" && (
-                        <>
-                          <button
-                            onClick={() => updateStatus(s.id, "despachado")}
-                            className="px-3 py-1 rounded-full bg-[#6294A0] text-white text-xs uppercase"
-                          >
-                            Despachar
-                          </button>
-                          <button
-                            onClick={() => updateStatus(s.id, "recibida")}
-                            className="px-3 py-1 rounded-full bg-green-600 text-white text-xs uppercase"
-                          >
-                            Recibida
-                          </button>
-                        </>
-                      )}
-
-                      {s.status !== "cancelada" && s.status !== "recibida" && s.status !== "enviada" && (
-                        <button
-                          onClick={() => updateStatus(s.id, "cancelada")}
-                          className="px-3 py-1 rounded-full border border-red-500/50 text-red-400 text-xs uppercase"
-                        >
-                          Cancelar
-                        </button>
-                      )}
+                    {/* Botones */}
+                    <div className="flex gap-2 flex-wrap mt-4">
+                      <button className="px-3 py-1 rounded-full border border-white/20 text-xs uppercase">
+                        Solicitar Pago
+                      </button>
+                      <button className="px-3 py-1 rounded-full border border-white/20 text-xs uppercase">
+                        En Producción
+                      </button>
+                      <button className="px-3 py-1 rounded-full border border-white/20 text-xs uppercase">
+                        Despachado
+                      </button>
+                      <button className="px-3 py-1 rounded-full border border-white/20 text-xs uppercase">
+                        Recibida
+                      </button>
+                      <button className="px-3 py-1 rounded-full border border-white/20 text-xs uppercase">
+                        Cancelar
+                      </button>
                     </div>
                   </div>
                 )}
