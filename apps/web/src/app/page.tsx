@@ -3,6 +3,7 @@ import { useUser, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Navbar from "@/components/Navbar";
 
 export default function Home() {
   const { user, isLoaded } = useUser();
@@ -50,42 +51,7 @@ export default function Home() {
 
       <div className="relative z-10 flex flex-col min-h-screen">
 
-        {/* NAVBAR */}
-        <nav className="flex items-center justify-between px-10 py-8">
-          <span className="text-white tracking-[0.3em] uppercase text-sm font-light">
-            condoleo
-          </span>
-
-          <div className="flex items-center gap-6">
-            {user && (
-              <Link
-                href="/solicitudes"
-                className="text-white/50 hover:text-white text-xs tracking-widest uppercase"
-              >
-                Mis solicitudes
-              </Link>
-            )}
-
-            {user ? (
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/perfil"
-                  className="text-white/50 hover:text-white text-xs tracking-widest uppercase"
-                >
-                  Mi perfil
-                </Link>
-                <UserButton />
-              </div>
-            ) : (
-              <Link
-                href="/sign-in"
-                className="text-white/70 hover:text-white border border-white/20 hover:border-white/60 px-5 py-2 rounded-full text-xs tracking-widest uppercase"
-              >
-                Ingresar
-              </Link>
-            )}
-          </div>
-        </nav>
+        <Navbar />
 
         {/* HERO */}
         {user ? (
@@ -109,13 +75,13 @@ export default function Home() {
             <div className="flex items-center gap-4">
               <Link
                 href="/solicitar"
-                className="inline-flex items-center gap-4 bg-[#6294A0] text-black px-10 py-4 text-xs tracking-widest uppercase font-medium hover:opacity-90 transition-all rounded-full"
+                className="inline-flex items-center gap-4 border border-white/20 text-white/50 hover:text-white hover:border-white/60 px-8 py-4 text-xs tracking-widest uppercase rounded-full"
               >
                 Solicitar ahora →
               </Link>
 
               <Link
-                href="/solicitudes"
+                href="/mis-solicitudes"
                 className="inline-flex items-center gap-4 border border-white/20 text-white/50 hover:text-white hover:border-white/60 px-8 py-4 text-xs tracking-widest uppercase rounded-full"
               >
                 Mis solicitudes

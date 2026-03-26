@@ -1,0 +1,216 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useUser, UserButton } from "@clerk/nextjs";
+import Link from "next/link";
+import Navbar from "@/components/Navbar";
+
+export default function Solicitar() {
+  const { user } = useUser();
+
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const [form, setForm] = useState({
+    productId: "",
+    talle: "",
+    unidad: "cm",
+    medicoNombre: "",
+    notas: "",
+    file: null as File | null,
+  });
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then(res => res.json())
+      .then(setProducts);
+  }, []);
+
+  const handleSubmit = async () => {
+    const confirmacion = confirm("¿Enviar solicitud al equipo?");
+    if (!confirmacion) return;
+
+    setLoading(true);
+
+    const body = new FormData();
+    body.append("productId", form.productId);
+    body.append("talle", form.talle);
+    body.append("unidad", form.unidad);
+    body.append("medicoNombre", form.medicoNombre);
+    body.append("notas", form.notas);
+
+    if (form.file) {
+      body.append("file", form.file);
+    }
+
+    const res = await fetch("/api/solicitudes", {
+      method: "POST",
+      body,
+    });
+
+    const data = await res.json();
+    setLoading(false);
+
+    if (data.success) {
+      alert("Solicitud enviada correctamente");
+    } else {
+      alert(data.error);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+
+      <Navbar />
+
+      {/* CONTENIDO */}
+      <div className="flex justify-center px-6 pb-20">
+        <div className="w-full max-w-xl space-y-12">
+
+          {/* TITULO PRO */}
+          <div className="text-center mt-10">
+            <h1
+              className="text-white text-5xl font-light mb-4"
+              style={{ fontFamily: "Georgia, serif", letterSpacing: "-0.02em" }}
+            >
+              Solicitar.
+            </h1>
+            <div className="w-10 h-px bg-white/20 mx-auto" />
+          </div>
+
+          {/* DATOS */}
+          <div className="border border-white/10 rounded-2xl p-6 space-y-3 bg-white/5">
+            <p className="text-xs text-white/40 uppercase tracking-widest">
+              Datos del cliente
+            </p>
+
+            <p className="text-white">{user?.fullName}</p>
+            <p className="text-white/60 text-sm">
+              {user?.primaryEmailAddress?.emailAddress}
+            </p>
+          </div>
+
+          {/* FORM */}
+          <div className="space-y-8">
+
+            {/* PRODUCTO */}
+            <div className="space-y-2">
+              <label className="text-xs text-white/40 uppercase tracking-widest">
+                Producto
+              </label>
+
+              <select
+                className="w-full bg-black border border-white/20 p-4 rounded-xl"
+                onChange={(e) =>
+                  setForm({ ...form, productId: e.target.value })
+                }
+              >
+                <option value="">Seleccionar</option>
+                {products.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} - ${p.price}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* TALLE */}
+            <div className="space-y-2">
+              <label className="text-xs text-white/40 uppercase tracking-widest">
+                Talle
+              </label>
+
+              <div className="flex gap-3">
+                <input
+                  type="number"
+                  placeholder="Ej: 26"
+                  className="w-2/3 bg-black border border-white/20 p-4 rounded-xl"
+                  onChange={(e) =>
+                    setForm({ ...form, talle: e.target.value })
+                  }
+                />
+
+                <select
+                  className="w-1/3 bg-black border border-white/20 p-4 rounded-xl"
+                  onChange={(e) =>
+                    setForm({ ...form, unidad: e.target.value })
+                  }
+                >
+                  <option value="cm">cm</option>
+                  <option value="calzado">calzado</option>
+                </select>
+              </div>
+
+              <p className="text-xs text-white/40">
+                Medir una plantilla existente en centímetros para mayor precisión.
+              </p>
+            </div>
+
+            {/* ARCHIVO */}
+            <div className="space-y-3">
+              <label className="text-xs text-white/40 uppercase tracking-widest">
+                Orden médica
+              </label>
+
+<label className="inline-flex items-center gap-4 border border-white/20 text-white/50 hover:text-white hover:border-white/60 px-6 py-3 text-xs tracking-widest uppercase rounded-full cursor-pointer transition">
+  Subir archivo →
+  <input
+    type="file"
+    className="hidden"
+    onChange={(e) =>
+      setForm({ ...form, file: e.target.files?.[0] || null })
+    }
+  />
+</label>
+
+              {form.file && (
+                <p className="text-xs text-white/40">
+                  {form.file.name}
+                </p>
+              )}
+            </div>
+
+            {/* MÉDICO */}
+            <div className="space-y-2">
+              <label className="text-xs text-white/40 uppercase tracking-widest">
+                Médico
+              </label>
+
+              <input
+                placeholder="Nombre del médico"
+                className="w-full bg-black border border-white/20 p-4 rounded-xl"
+                onChange={(e) =>
+                  setForm({ ...form, medicoNombre: e.target.value })
+                }
+              />
+            </div>
+
+            {/* NOTAS */}
+            <div className="space-y-2">
+              <label className="text-xs text-white/40 uppercase tracking-widest">
+                Notas
+              </label>
+
+              <textarea
+                placeholder="Información adicional"
+                className="w-full bg-black border border-white/20 p-4 rounded-xl"
+                onChange={(e) =>
+                  setForm({ ...form, notas: e.target.value })
+                }
+              />
+            </div>
+
+            {/* BOTON FINAL */}
+<button
+  onClick={handleSubmit}
+  disabled={loading}
+  className="w-full inline-flex items-center justify-center gap-4 border border-white/20 text-white/50 hover:text-white hover:border-white/60 px-8 py-4 text-xs tracking-widest uppercase rounded-full transition"
+>
+  {loading ? "Enviando..." : "Enviar solicitud →"}
+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

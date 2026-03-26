@@ -18,17 +18,12 @@ export const userRoleEnum = pgEnum("user_role", [
 ]);
 
 export const solicitudStatusEnum = pgEnum("solicitud_status", [
-  "draft",
-  "submitted",
-  "reviewing",
-  "approved",
-  "rejected",
-  "payment_pending",
-  "paid",
-  "in_production",
-  "shipped",
-  "delivered",
-  "cancelled",
+  "enviada",
+  "aprobada_pendiente_pago",
+  "en_produccion",
+  "despachado",
+  "recibida",
+  "cancelada",
 ]);
 
 export const pieEnum = pgEnum("pie", [
@@ -135,7 +130,7 @@ export const solicitudes = pgTable("solicitudes", {
     .references(() => products.id)
     .notNull(),
 
-  status: solicitudStatusEnum("status").default("draft"),
+  status: solicitudStatusEnum("status").default("enviada"),
 
   // Datos clínicos
   talle: text("talle").notNull(),

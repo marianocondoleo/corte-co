@@ -8,6 +8,13 @@
       "when": 1774531105025,
       "tag": "0000_windy_wind_dancer",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774553445636,
+      "tag": "0001_groovy_phantom_reporter",
+      "breakpoints": true
     }
   ]
 }

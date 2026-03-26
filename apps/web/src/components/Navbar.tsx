@@ -2,7 +2,6 @@
 import { useUser, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import CarritoIcon from "@/components/CarritoIcon";
 
 export default function Navbar() {
   const { user } = useUser();
@@ -12,44 +11,58 @@ export default function Navbar() {
 
   return (
     <nav className="flex items-center justify-between px-10 py-8 border-b border-white/5">
+      
+      {/* LOGO */}
       <Link
         href="/"
         className="text-white tracking-[0.3em] uppercase text-sm font-light"
         style={{ fontFamily: "Georgia, serif" }}
       >
-        Corte & Co.
+        condoleo
       </Link>
 
+      {/* LINKS */}
       <div className="flex items-center gap-6">
-        <Link
-          href="/catalogo"
-          className={`text-xs tracking-widest uppercase font-light transition-colors ${
-            isActive("/catalogo") ? "text-white" : "text-white/40 hover:text-white"
-          }`}
-        >
-          Catálogo
-        </Link>
 
-        <CarritoIcon />
+        {user && (
+          <>
+            <Link
+              href="/solicitar"
+              className={`text-xs tracking-widest uppercase font-light transition-colors ${
+                isActive("/solicitar")
+                  ? "text-white"
+                  : "text-white/40 hover:text-white"
+              }`}
+            >
+              Solicitar
+            </Link>
+
+            <Link
+              href="/mis-solicitudes"
+              className={`text-xs tracking-widest uppercase font-light transition-colors ${
+                isActive("/solicitudes")
+                  ? "text-white"
+                  : "text-white/40 hover:text-white"
+              }`}
+            >
+              Mis solicitudes
+            </Link>
+          </>
+        )}
 
         {user ? (
           <div className="flex items-center gap-4">
             <Link
-              href="/pedidos"
-              className={`text-xs tracking-widest uppercase font-light transition-colors ${
-                isActive("/pedidos") ? "text-white" : "text-white/40 hover:text-white"
-              }`}
-            >
-              Mis pedidos
-            </Link>
-            <Link
               href="/perfil"
               className={`text-xs tracking-widest uppercase font-light transition-colors ${
-                isActive("/perfil") ? "text-white" : "text-white/40 hover:text-white"
+                isActive("/perfil")
+                  ? "text-white"
+                  : "text-white/40 hover:text-white"
               }`}
             >
               Mi perfil
             </Link>
+
             <UserButton />
           </div>
         ) : (
