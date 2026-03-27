@@ -20,7 +20,7 @@ export default function Navbar() {
 
   return (
     <nav className="flex items-center justify-between px-10 py-8 border-b border-white/5">
-      
+
       {/* LOGO */}
       <Link
         href="/"
@@ -33,6 +33,19 @@ export default function Navbar() {
       {/* LINKS */}
       <div className="flex items-center gap-6">
 
+        {/* Productos — visible para todos */}
+        <Link
+          href="/productos"
+          className={`text-xs tracking-widest uppercase font-light transition-colors ${
+            isActive("/productos")
+              ? "text-white"
+              : "text-white/40 hover:text-white"
+          }`}
+        >
+          Productos
+        </Link>
+
+        {/* Solicitar — visible para todos, redirige a login si no está logueado */}
         <button
           onClick={handleSolicitar}
           className={`text-xs tracking-widest uppercase font-light transition-colors ${
@@ -44,6 +57,7 @@ export default function Navbar() {
           Solicitar
         </button>
 
+        {/* Mis solicitudes — solo logueados */}
         {user && (
           <Link
             href="/mis-solicitudes"
