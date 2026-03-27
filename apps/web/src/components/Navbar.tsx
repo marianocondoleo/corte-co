@@ -1,13 +1,22 @@
 "use client";
 import { useUser, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Navbar() {
   const { user } = useUser();
   const pathname = usePathname();
+  const router = useRouter();
 
   const isActive = (href: string) => pathname === href;
+
+  const handleSolicitar = () => {
+    if (!user) {
+      router.push("/sign-in");
+    } else {
+      router.push("/solicitar");
+    }
+  };
 
   return (
     <nav className="flex items-center justify-between px-10 py-8 border-b border-white/5">
@@ -24,30 +33,28 @@ export default function Navbar() {
       {/* LINKS */}
       <div className="flex items-center gap-6">
 
-        {user && (
-          <>
-            <Link
-              href="/solicitar"
-              className={`text-xs tracking-widest uppercase font-light transition-colors ${
-                isActive("/solicitar")
-                  ? "text-white"
-                  : "text-white/40 hover:text-white"
-              }`}
-            >
-              Solicitar
-            </Link>
+        <button
+          onClick={handleSolicitar}
+          className={`text-xs tracking-widest uppercase font-light transition-colors ${
+            isActive("/solicitar")
+              ? "text-white"
+              : "text-white/40 hover:text-white"
+          }`}
+        >
+          Solicitar
+        </button>
 
-            <Link
-              href="/mis-solicitudes"
-              className={`text-xs tracking-widest uppercase font-light transition-colors ${
-                isActive("/solicitudes")
-                  ? "text-white"
-                  : "text-white/40 hover:text-white"
-              }`}
-            >
-              Mis solicitudes
-            </Link>
-          </>
+        {user && (
+          <Link
+            href="/mis-solicitudes"
+            className={`text-xs tracking-widest uppercase font-light transition-colors ${
+              isActive("/mis-solicitudes")
+                ? "text-white"
+                : "text-white/40 hover:text-white"
+            }`}
+          >
+            Mis solicitudes
+          </Link>
         )}
 
         {user ? (
@@ -62,7 +69,6 @@ export default function Navbar() {
             >
               Mi perfil
             </Link>
-
             <UserButton />
           </div>
         ) : (
