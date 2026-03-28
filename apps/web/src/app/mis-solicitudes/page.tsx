@@ -8,6 +8,7 @@ type Solicitud = {
   id: string;
   status: string;
   talle: string;
+  tipoMedida?: string
   medicoNombre?: string;
   notas?: string;
   precioProducto?: string;
@@ -115,7 +116,7 @@ export default function MisSolicitudesPage() {
                   <strong>Talle:</strong> {s.talle}
                 </p>
                 <p>
-                  <strong>Pie:</strong> {s.pie}
+                  <strong>Medida:</strong> {s.talle} {s.tipoMedida}
                 </p>
                 {s.medicoNombre && (
                   <p>

@@ -21,7 +21,7 @@ export async function GET() {
     const data = await db.select().from(products).orderBy(products.createdAt);
     return NextResponse.json(data);
   } catch (error) {
-    console.error("ERROR PRODUCTOS:", JSON.stringify(error, null, 2)); // ← cambiá esta línea
+    console.error("Error al obtener productos:", error);
     return NextResponse.json({ error: "Error al obtener productos" }, { status: 500 });
   }
 }
